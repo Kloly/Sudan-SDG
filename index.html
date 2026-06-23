@@ -50,4 +50,296 @@
     display:flex;
     align-items:center;
     gap:8px;
-    color:var
+    color:var(--muted);
+    font-size:13px;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--fall);
+    box-shadow:0 0 0 0 rgba(63,167,150,0.6);
+    animation:pulse 2.2s infinite;
+  }
+  @media (prefers-reduced-motion: reduce){ .dot{animation:none;} }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(63,167,150,0.55);}
+    70%{box-shadow:0 0 0 8px rgba(63,167,150,0);}
+    100%{box-shadow:0 0 0 0 rgba(63,167,150,0);}
+  }
+
+  .hero{
+    background:linear-gradient(160deg, var(--bg-card) 0%, #0E2327 100%);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:28px 26px;
+    margin-bottom:22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(360px 200px at 85% -20%, rgba(212,162,76,0.16), transparent 70%);
+    pointer-events:none;
+  }
+  .hero-label{
+    color:var(--muted);
+    font-size:14px;
+    margin-bottom:6px;
+  }
+  .hero-row{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .hero-number{
+    font-family:'Markazi Text', serif;
+    font-weight:700;
+    font-size:64px;
+    line-height:1;
+    color:var(--text);
+  }
+  .hero-unit{
+    color:var(--muted);
+    font-size:18px;
+  }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+  }
+  .badge.up{background:rgba(226,97,60,0.16);color:var(--rise);}
+  .badge.down{background:rgba(63,167,150,0.16);color:var(--fall);}
+  .badge.flat{background:rgba(143,167,163,0.16);color:var(--muted);}
+  .hero-sub{
+    margin-top:10px;
+    color:var(--muted);
+    font-size:13px;
+  }
+  .hero-sub b{color:var(--text);}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px,1fr));
+    gap:12px;
+    margin-bottom:24px;
+  }
+  .card{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 14px;
+  }
+  .card .name{font-size:13px;color:var(--muted);margin-bottom:8px;}
+  .card .num{font-size:22px;font-weight:700;}
+  .card .official{font-size:12px;color:var(--muted);margin-top:6px;}
+  .card .delta{font-size:12px;margin-top:6px;}
+  .up-text{color:var(--rise);}
+  .down-text{color:var(--fall);}
+
+  .panel{
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:20px;
+  }
+  .panel h2{
+    font-family:'Markazi Text', serif;
+    font-size:22px;
+    margin:0 0 14px;
+    color:var(--gold);
+  }
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;}
+  .tab{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:6px 14px;
+    border-radius:999px;
+    font-size:13px;
+    font-family:inherit;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tab.active{background:var(--gold);color:#1a1306;border-color:var(--gold);}
+  .chart-wrap{height:280px;}
+
+  footer{
+    margin-top:30px;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.8;
+    text-align:center;
+  }
+  footer a{color:var(--gold);text-decoration:none;}
+
+  .empty{color:var(--muted);text-align:center;padding:40px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">نبض السوق</div>
+    <div class="live"><span class="dot"></span><span id="lastUpdate">جاري التحميل…</span></div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-label">الدولار الأمريكي — السوق الموازي</div>
+    <div class="hero-row">
+      <div class="hero-number" id="usdUnofficial">—</div>
+      <div class="hero-unit">جنيه سوداني</div>
+      <span class="badge flat" id="usdBadge">—</span>
+    </div>
+    <div class="hero-sub">السعر الرسمي: <b id="usdOfficial">—</b> جنيه سوداني</div>
+  </section>
+
+  <div class="grid" id="cardsGrid"></div>
+
+  <section class="panel">
+    <h2>الاتجاه عبر الزمن</h2>
+    <div class="tabs" id="tabs"></div>
+    <div class="chart-wrap"><canvas id="historyChart"></canvas></div>
+  </section>
+
+  <footer>
+    الأسعار مُجمَّعة تلقائيًا كل ساعة من مصادر عامة سودانية (alsoug.com) وقد تختلف قليلًا بين منطقة وأخرى أو بين بائع وآخر.<br/>
+    هذا الموقع لأغراض إعلامية فقط وليس مصدرًا رسميًا للتسعير.
+  </footer>
+</div>
+
+<script>
+const CODES = ["USD","EUR","SAR","AED","EGP","QAR"];
+const NAMES = {
+  USD:"الدولار الأمريكي", EUR:"اليورو", SAR:"الريال السعودي",
+  AED:"الدرهم الإماراتي", EGP:"الجنيه المصري", QAR:"الريال القطري"
+};
+const COLORS = {
+  USD:"#D4A24C", EUR:"#3FA796", SAR:"#E2613C",
+  AED:"#7FB7BE", EGP:"#C98BD9", QAR:"#E0C36B"
+};
+
+let chart, activeCode = "USD", history = [];
+
+function fmt(n){
+  if(n===null||n===undefined) return "—";
+  return Number(n).toLocaleString('en-US', {maximumFractionDigits:2});
+}
+
+function timeLabel(iso){
+  const d = new Date(iso);
+  return d.toLocaleString('ar', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+}
+
+function deltaBadge(curr, prev){
+  if(prev===null||prev===undefined||curr===null) return {cls:"flat", text:"—"};
+  const diff = curr - prev;
+  if(Math.abs(diff) < 0.001) return {cls:"flat", text:"بدون تغيير"};
+  const pct = prev ? (diff/prev*100) : 0;
+  return diff > 0
+    ? {cls:"up", text:`▲ ${fmt(Math.abs(diff))} (${pct.toFixed(1)}%)`}
+    : {cls:"down", text:`▼ ${fmt(Math.abs(diff))} (${Math.abs(pct).toFixed(1)}%)`};
+}
+
+function render(){
+  if(!history.length){
+    document.querySelector('.wrap').innerHTML = '<div class="empty">لا توجد بيانات بعد. سيبدأ السكريبت بالتجميع عند أول تشغيل.</div>';
+    return;
+  }
+  const latest = history[history.length-1];
+  const prev = history.length>1 ? history[history.length-2] : null;
+
+  document.getElementById('lastUpdate').textContent =
+    "آخر تحديث: " + timeLabel(latest.timestamp);
+
+  const usd = latest.rates.USD || {};
+  document.getElementById('usdUnofficial').textContent = fmt(usd.unofficial);
+  document.getElementById('usdOfficial').textContent = fmt(usd.official);
+  const usdPrev = prev && prev.rates.USD ? prev.rates.USD.unofficial : null;
+  const b = deltaBadge(usd.unofficial, usdPrev);
+  const badgeEl = document.getElementById('usdBadge');
+  badgeEl.className = "badge " + b.cls;
+  badgeEl.textContent = b.text;
+
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = "";
+  CODES.filter(c=>c!=="USD").forEach(code=>{
+    const r = latest.rates[code];
+    if(!r) return;
+    const prevVal = prev && prev.rates[code] ? prev.rates[code].unofficial : null;
+    const d = deltaBadge(r.unofficial, prevVal);
+    const div = document.createElement('div');
+    div.className = "card";
+    div.innerHTML = `
+      <div class="name">${NAMES[code]}</div>
+      <div class="num">${fmt(r.unofficial)}</div>
+      <div class="official">رسمي: ${fmt(r.official)}</div>
+      <div class="delta ${d.cls==='up'?'up-text':d.cls==='down'?'down-text':''}">${d.text}</div>
+    `;
+    grid.appendChild(div);
+  });
+
+  renderTabs();
+  renderChart();
+}
+
+function renderTabs(){
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = "";
+  CODES.forEach(code=>{
+    const btn = document.createElement('button');
+    btn.className = "tab" + (code===activeCode ? " active" : "");
+    btn.textContent = NAMES[code];
+    btn.onclick = () => { activeCode = code; renderTabs(); renderChart(); };
+    tabs.appendChild(btn);
+  });
+}
+
+function renderChart(){
+  const labels = history.map(h => timeLabel(h.timestamp));
+  const data = history.map(h => h.rates[activeCode] ? h.rates[activeCode].unofficial : null);
+  const ctx = document.getElementById('historyChart');
+
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label: NAMES[activeCode] + " — السوق الموازي",
+        data,
+        borderColor: COLORS[activeCode],
+        backgroundColor: COLORS[activeCode] + "33",
+        fill:true,
+        tension:0.3,
+        pointRadius:0,
+        borderWidth:2,
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ ticks:{ color:"#8FA7A3", maxTicksLimit:6 }, grid:{ color:"rgba(242,233,220,0.05)" } },
+        y:{ ticks:{ color:"#8FA7A3" }, grid:{ color:"rgba(242,233,220,0.05)" } }
+      }
+    }
+  });
+}
+
+fetch('data/history.json')
+  .then(r => r.json())
+  .then(d => { history = d; render(); })
+  .catch(() => {
+    document.querySelector('.wrap').innerHTML =
+      '<div class="empty">تعذّر تحميل data/history.json — تأكد أن الملف موجود بجانب هذه الصفحة.</div>';
+  });
+</script>
+</body>
+</html>
