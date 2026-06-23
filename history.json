@@ -1,0 +1,13 @@
+[
+  {
+    "timestamp": "2026-06-23T12:00:00+00:00",
+    "rates": {
+      "USD": { "official": 3415.43, "unofficial": 5500 },
+      "AED": { "official": 935.74, "unofficial": 1500 },
+      "EUR": { "official": 3844.07, "unofficial": 6384 },
+      "SAR": { "official": 918.13, "unofficial": 1430 },
+      "EGP": { "official": 68.49, "unofficial": 110 },
+      "QAR": { "official": 943.63, "unofficial": 1500 }
+    }
+  }
+]
